@@ -86,10 +86,11 @@
         const orbColor2 = 'rgb(168, 254, 127)'; // #A8FE7F
         const orbGlowColor = 'rgb(184, 255, 0)'; // #B8FF00
 
-        const minGlowRadius = 10.0;
-        const maxGlowRadius = 25.0;
-        const minGlowRadiusLight = minGlowRadius + 5.0;
-        const maxGlowRadiusLight = maxGlowRadius + 10.0;
+        // Increase the glow radius range
+        const minGlowRadius = 15.0; // Was 10.0
+        const maxGlowRadius = 40.0; // Was 25.0
+        const minGlowRadiusLight = minGlowRadius + 5.0; // Becomes 20.0 (Was 15.0)
+        const maxGlowRadiusLight = maxGlowRadius + 10.0; // Becomes 50.0 (Was 35.0)
         const baseGlowAnimationDuration = 2.0; // seconds
 
         const baseGradientMultiplier = 0.54;
