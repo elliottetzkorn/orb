@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: #ffffff; /* Default light background */
+            position: relative;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #000000; /* Dark background */
+            }
+        }
+
+        .orb {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            cursor: pointer; /* Assuming it might be clickable */
+
+            /* Variables for animation */
+            --orb-color-1: #C8FF32; /* rgb(200, 255, 50) */
+            --orb-color-2: #A8FE7F; /* rgb(168, 254, 127) */
+            --orb-glow-color: #B8FF00; /* rgb(184, 255, 0) */
+            --glow-radius: 10px;
+            --gradient-end-radius-multiplier: 0.54; /* baseGradientMultiplier */
+
+            /* Calculated gradient end radius */
+            --gradient-end-radius: calc(80px * var(--gradient-end-radius-multiplier));
+
+            background: radial-gradient(
+                circle at center,
+                var(--orb-color-1) 0%,
+                var(--orb-color-2) 100% /* Will be adjusted by JS */
+            );
+             /* Apply gradient size dynamically */
+            background-size: calc(var(--gradient-end-radius) * 2) calc(var(--gradient-end-radius) * 2);
+            background-position: center;
+            background-repeat: no-repeat;
+
+
+            box-shadow: 0 0 var(--glow-radius) 0 var(--orb-glow-color);
+
+            /* Transitions will be added via JS */
+            transition: box-shadow ease-in-out, background ease-in-out; /* Add background transition */
+        }
+
+        /* Basic arrow styling (optional, can be enhanced) */
+        .orb::after {
+            content: '↑'; /* Simple arrow character */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: calc(80px * 0.4);
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.8);
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .orb.show-arrow::after {
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+    <a href="https://apps.apple.com/us/developer/maki-software/id1656625143">
+        <div class="orb" id="orb"></div>
+    </a>
+
+    <script>
+        // Constants from Swift code
+        const orbSize = 80.0;
+        const orbColor1 = 'rgb(200, 255, 50)'; // #C8FF32
+        const orbColor2 = 'rgb(168, 254, 127)'; // #A8FE7F
+        const orbGlowColor = 'rgb(184, 255, 0)'; // #B8FF00
+
+        const minGlowRadius = 10.0;
+        const maxGlowRadius = 25.0;
+        const minGlowRadiusLight = minGlowRadius + 5.0;
+        const maxGlowRadiusLight = maxGlowRadius + 10.0;
+        const baseGlowAnimationDuration = 2.0; // seconds
+
+        const baseGradientMultiplier = 0.54;
+        const gradientMultiplierVariation = 0.1;
+        const minGradientMultiplier = baseGradientMultiplier * (1.0 - gradientMultiplierVariation);
+        const maxGradientMultiplier = baseGradientMultiplier * (1.0 + gradientMultiplierVariation);
+        const baseGradientAnimationDuration = 2.5; // seconds
+
+        const orbElement = document.getElementById('orb');
+        let isAnimating = true; // Control flag
+
+        // Function to get random number in a range
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // --- Animation Logic (to be implemented) ---
+
+        function triggerNextGlowAnimation() {
+            if (!isAnimating) return;
+
+            const isLightMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+            const currentMinRadius = isLightMode ? minGlowRadiusLight : minGlowRadius;
+            const currentMaxRadius = isLightMode ? maxGlowRadiusLight : maxGlowRadius;
+
+            const targetRadius = randomInRange(currentMinRadius, currentMaxRadius);
+            const duration = randomInRange(baseGlowAnimationDuration * 0.8, baseGlowAnimationDuration * 1.2);
+
+            // Apply transition duration and target value
+            orbElement.style.transitionDuration = `${duration}s, ${duration}s`; // Apply to both box-shadow and background
+            orbElement.style.setProperty('--glow-radius', `${targetRadius}px`);
+
+            // Schedule next animation
+            setTimeout(triggerNextGlowAnimation, duration * 1000);
+        }
+
+        function triggerNextGradientAnimation() {
+             if (!isAnimating) return;
+
+            const targetMultiplier = randomInRange(minGradientMultiplier, maxGradientMultiplier);
+            const duration = randomInRange(baseGradientAnimationDuration * 0.8, baseGradientAnimationDuration * 1.2);
+            const targetEndRadius = orbSize * targetMultiplier;
+
+
+            // Update the CSS variable for gradient end radius
+            orbElement.style.setProperty('--gradient-end-radius-multiplier', targetMultiplier);
+
+             // Re-calculate endRadius for the background property directly
+             const endRadiusPercent = targetMultiplier * 100; // Approximate percentage for radial gradient
+              orbElement.style.background = `radial-gradient(circle at center, ${orbColor1} 0%, ${orbColor2} ${endRadiusPercent*1.5}%)`; // Adjust multiplier slightly for visual match
+
+
+            // Apply transition duration - make sure CSS handles background transition
+             // Note: The transition timing might need separate control if different from glow
+             orbElement.style.transitionDuration = `${orbElement.style.getPropertyValue('--glow-radius') ? orbElement.style.transitionDuration.split(',')[0] : duration + 's'}, ${duration}s`;
+
+
+            // Schedule next animation
+            setTimeout(triggerNextGradientAnimation, duration * 1000);
+        }
+
+        // --- Start Animations ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set initial transition timing function (matches Swift's easeInOut)
+             orbElement.style.transitionTimingFunction = 'ease-in-out, ease-in-out';
+
+            // Optional: Show arrow (set to true to show)
+            const showArrow = false;
+            if (showArrow) {
+                orbElement.classList.add('show-arrow');
+            }
+
+            // Add click listener (optional)
+            orbElement.addEventListener('click', () => {
+                console.log('Orb clicked!');
+                 if (showArrow) {
+                     orbElement.classList.remove('show-arrow');
+                 }
+                // Add your action here
+            });
+
+             // Start the animations
+             triggerNextGlowAnimation();
+             triggerNextGradientAnimation();
+
+
+             // Stop animations if window loses focus (optional, like onDisappear)
+             window.addEventListener('blur', () => { isAnimating = false; });
+             window.addEventListener('focus', () => {
+                 if (!isAnimating) {
+                    isAnimating = true;
+                    // Restart animations ensuring no overlap
+                    // Small delay to prevent potential race conditions if needed
+                    setTimeout(() => {
+                        if(isAnimating) { // Check again in case focus/blur happened quickly
+                             triggerNextGlowAnimation();
+                             triggerNextGradientAnimation();
+                        }
+                    }, 100);
+                 }
+             });
+
+              // Handle color scheme changes for glow radius
+             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                 // No immediate change needed, the next triggerNextGlowAnimation will pick up the correct radius
+                 console.log(`Color scheme changed to ${event.matches ? "Dark" : "Light"}`);
+             });
+        });
+
+    </script>
+</body>
+</html> 
